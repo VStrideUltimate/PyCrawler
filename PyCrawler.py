@@ -46,7 +46,9 @@ class Crawler(object):
     def in_domain(self, call_url):
 
         call_url = urlparse(call_url).hostname
-        if call_url == None: return False
+        if call_url is None:
+            return False
+
         return self.root in call_url
 
     def find_links(self, source):
@@ -58,13 +60,15 @@ class Crawler(object):
 
         return links
 
-    def find_domain_links(self, source):
+    def find_domain_links(self, source): # FIX THIS!!!!!
         # find all links to domain in source
-        links = [ln for ln in self.find_links(source) if ln != '/']
+        links = [ln for ln in self.find_links(source) if ln != '/' and ln is not None]
 
         for i in range(len(links)):
-            if links[i][0] == '/':
-                links[i] = self.url_inpt + links[i]
+            parsed_link = urlparse(links[i])
+            if len(parsed_link.netloc) is 0:
+                parsed_uri = urlparse(self.url_inpt)
+                links[i] = '{uri.scheme}://{uri.netloc}{uri.path}'.format(uri=parsed_uri) + '{link.path}'.format(link=parsed_link)
 
         return [x for x in links if self.in_domain(x)]
 
