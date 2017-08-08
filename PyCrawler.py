@@ -16,6 +16,54 @@ __author__ = 'Dylan Wagner'
 __version__ = 0.1
 
 
+def get_source(call_url):
+    # attempt to gather URL source code.
+    try:
+        req = requests.request('GET', call_url)
+
+        if req.status_code == 404:
+            return 'ERROR -> 404'
+        else:
+            return req.text
+
+    except requests.exceptions.ConnectionError:
+
+        return 'ERROR -> No Connection'
+
+
+def find_links(source):
+    links = []
+    soup = BeautifulSoup(source, "html.parser")
+
+    for link in soup.findAll('a'):
+        href = link.get("href")
+        if href is not None:
+            links.append(href)
+
+    return links
+
+
+def fix_path(url, call_url):
+    parsed_url = urlparse(url)
+    parsed_call = urlparse(call_url)
+    split_url_path = parsed_url.path.split('/')
+    split_call_path = parsed_call.path.split('/')
+    path_to_append = ''
+
+    if parsed_url.hostname is None:
+
+        if split_url_path[0] is not '':
+            pathd = [seg for seg in split_call_path if '.' not in seg]
+
+            move_below = len(pathd) - split_url_path.count('..')
+            path_to_append = '/'.join(pathd[:move_below]) + '/'
+
+    formt = [prt for prt in split_url_path if '..' not in prt]
+    path_to_append += '/'.join(formt)
+
+    return "{url.scheme}://{url.netloc}{path}".format(url=parsed_call, path=path_to_append)
+
+
 class Crawler(object):
     """
     Crawler class:
@@ -26,22 +74,7 @@ class Crawler(object):
         self.url_inpt = url_inpt
         self.root = root
         self.linked_pages = {}
-        self.bulid_relation(self.url_inpt)
-
-    def get_source(self, call_url):
-
-        # attempt to gather URL source code.
-        try:
-            req = requests.request('GET', call_url)
-
-            if req.status_code == 404:
-                return 'ERROR -> 404'
-            else:
-                return req.text
-
-        except requests.exceptions.ConnectionError:
-
-            return 'ERROR -> No Connection'
+        self.build_relation(self.url_inpt)
 
     def in_domain(self, call_url):
 
@@ -51,53 +84,42 @@ class Crawler(object):
 
         return self.root in call_url
 
-    def find_links(self, source):
-        links = []
-        soup = BeautifulSoup(source, "html.parser")
-
-        for link in soup.findAll('a'):
-            links.append(link.get("href"))
-
-        return links
-
-    def find_domain_links(self, source): # FIX THIS!!!!!
+    def find_domain_links(self, source, call_url):  # FIX THIS!!!!!
         # find all links to domain in source
-        links = [ln for ln in self.find_links(source) if ln != '/' and ln is not None]
+        links = find_links(source)
 
         for i in range(len(links)):
-            parsed_link = urlparse(links[i])
-            if len(parsed_link.netloc) is 0:
-                parsed_uri = urlparse(self.url_inpt)
-                links[i] = '{uri.scheme}://{uri.netloc}{uri.path}'.format(uri=parsed_uri) + '{link.path}'.format(link=parsed_link)
+            links[i] = fix_path(links[i], call_url)
 
-        return [x for x in links if self.in_domain(x)]
+        return [url for url in links if self.in_domain(url)]
 
-    def bulid_relation(self, call_url):
+    def build_relation(self, call_url):
         # recursively build web domain graph
         if call_url in self.linked_pages:
             return
 
         self.linked_pages[call_url] = []
-        source = self.get_source(call_url)
+        source = get_source(call_url)
 
         if source[:5] == 'ERROR':
             self.linked_pages[call_url].append(source)
             return
 
-        links = self.find_domain_links(source)
+        links = self.find_domain_links(source, call_url)
 
         for link in links:
-            self.linked_pages[call_url].append(link)
-            self.bulid_relation(link)
+            if link not in self.linked_pages[call_url]:
+                self.linked_pages[call_url].append(link)
+            self.build_relation(link)
 
 
-def help():
+def print_usage():
     print("Usage: python3 PyCrawler.py [URL] [Root of Domain]")
 
 
 def main():
     if len(sys.argv) < 3:
-        help()
+        print_usage()
         exit()
 
     if sys.argv[2] not in sys.argv[1]:
