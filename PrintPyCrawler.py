@@ -25,8 +25,8 @@ def print_links_followed(valid):
     print("---------- Links Followed ----------")
     valid.sort()
 
-    for link in valid:
-        print(link)
+    for i in range(len(valid)):
+        print('{0: <5}'.format(str(i)) + valid[i])
 
 def main():
     if len(sys.argv) < 3:
@@ -48,5 +48,15 @@ def main():
     print_info(started, valid, crawled_domain)
     print_links_followed(valid)
 
+    while True:
+        inpt = input("[PyCrawler]>> ")
+
+        if inpt.isdigit():
+            if int(inpt) < len(valid) and int(inpt) >= 0:
+                lst = crawled_domain.linked_pages[valid[int(inpt)]]
+                for i in lst:
+                    print(i)
+        else:
+            exit()
 
 main()
