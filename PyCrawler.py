@@ -4,9 +4,8 @@ Author: Dylan Wagner
 Date: August 2017
 Description:
 	Program used to discover and follow links as they are gathered of a given web domain.
-
 """
-import sys
+
 from urllib.parse import urlparse
 
 import requests
@@ -40,7 +39,7 @@ def find_links(source):
         if href is not None:
             links.append(href)
 
-    return links
+    return [link for link in links if '#' not in link]
 
 
 def fix_path(url, call_url):
@@ -49,6 +48,7 @@ def fix_path(url, call_url):
     split_url_path = parsed_url.path.split('/')
     split_call_path = parsed_call.path.split('/')
     path_to_append = ''
+    use = parsed_url
 
     if parsed_url.hostname is None:
 
@@ -58,10 +58,15 @@ def fix_path(url, call_url):
             move_below = len(pathd) - split_url_path.count('..')
             path_to_append = '/'.join(pathd[:move_below]) + '/'
 
+        use = parsed_call
+
     formt = [prt for prt in split_url_path if '..' not in prt]
     path_to_append += '/'.join(formt)
 
-    return "{url.scheme}://{url.netloc}{path}".format(url=parsed_call, path=path_to_append)
+    if path_to_append == '/':
+        path_to_append = ''
+
+    return "{url.scheme}://{url.netloc}{path}".format(url=use, path=path_to_append)
 
 
 class Crawler(object):
@@ -84,7 +89,7 @@ class Crawler(object):
 
         return self.root in call_url
 
-    def find_domain_links(self, source, call_url):  # FIX THIS!!!!!
+    def find_domain_links(self, source, call_url):
         # find all links to domain in source
         links = find_links(source)
 
@@ -96,38 +101,21 @@ class Crawler(object):
     def build_relation(self, call_url):
         # recursively build web domain graph
         if call_url in self.linked_pages:
-            return
+            return 'ok'
 
-        self.linked_pages[call_url] = []
         source = get_source(call_url)
 
         if source[:5] == 'ERROR':
-            self.linked_pages[call_url].append(source)
-            return
+            return None
 
         links = self.find_domain_links(source, call_url)
+        self.linked_pages[call_url] = []
 
         for link in links:
-            if link not in self.linked_pages[call_url]:
+            if self.build_relation(link) is not None and link not in self.linked_pages[call_url]:
                 self.linked_pages[call_url].append(link)
-            self.build_relation(link)
 
+        return 'ok'
 
 def print_usage():
     print("Usage: python3 PyCrawler.py [URL] [Root of Domain]")
-
-
-def main():
-    if len(sys.argv) < 3:
-        print_usage()
-        exit()
-
-    if sys.argv[2] not in sys.argv[1]:
-        print("Root domain must be part of provided url.")
-        exit()
-
-    crawl = Crawler(sys.argv[1], sys.argv[2])
-    print(crawl.linked_pages)
-
-
-main()
