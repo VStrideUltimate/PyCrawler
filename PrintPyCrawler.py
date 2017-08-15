@@ -21,16 +21,26 @@ def print_info(started, valid, crawled_domain):
     print("Time Elapsed: " + str(timedelta(seconds=time_elapased)))
 
 
-def print_links_followed(valid):
+def print_links_followed_inter(valid):
     print("---------- Links Followed ----------")
-    valid.sort()
 
     for i in range(len(valid)):
         print('{0: <5}'.format(str(i)) + valid[i])
 
+
+def print_usage():
+    print("Usage: python3 PyCrawler.py [URL] [Root of Domain]\
+ '.' for interactive mode")
+
+
+def print_links_followed(valid):
+    for link in valid:
+        print(link)
+
+
 def main():
     if len(sys.argv) < 3:
-        PyCrawler.print_usage()
+        print_usage()
         exit()
 
     if sys.argv[2] not in sys.argv[1]:
@@ -38,25 +48,30 @@ def main():
         exit()
 
     started = time.time()
-
-    print("----------    PyCrawler   ----------")
-    print("Version: " + str(PyCrawler.__version__))
-    print("Started at: " + str(datetime.now()))
-
     crawled_domain = PyCrawler.Crawler(sys.argv[1], sys.argv[2])
     valid = [x for x in crawled_domain.linked_pages]
-    print_info(started, valid, crawled_domain)
-    print_links_followed(valid)
+    valid.sort()
 
-    while True:
-        inpt = input("[PyCrawler]>> ")
+    if len(sys.argv) > 3:
 
-        if inpt.isdigit():
-            if int(inpt) < len(valid) and int(inpt) >= 0:
-                lst = crawled_domain.linked_pages[valid[int(inpt)]]
-                for i in lst:
-                    print(i)
-        else:
-            exit()
+        print("----------    PyCrawler   ----------")
+        print("Version: " + str(PyCrawler.__version__))
+        print("Started at: " + str(datetime.now()))
+
+        print_info(started, valid, crawled_domain)
+        print_links_followed_inter(valid)
+
+        while True:
+            inpt = input("[PyCrawler]>> ")
+
+            if inpt.isdigit():
+                if int(inpt) < len(valid) and int(inpt) >= 0:
+                    lst = crawled_domain.linked_pages[valid[int(inpt)]]
+                    for i in lst:
+                        print(i)
+            else:
+                exit()
+    else:
+        print_links_followed(valid)
 
 main()

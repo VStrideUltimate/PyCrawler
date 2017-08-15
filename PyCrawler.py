@@ -3,7 +3,7 @@ File: PyCrawler.py
 Author: Dylan Wagner
 Date: August 2017
 Description:
-	Program used to discover and follow links as they are gathered of a given web domain.
+    Program used to discover and follow links as they are gathered of a given web domain.
 """
 
 from urllib.parse import urlparse
@@ -43,6 +43,9 @@ def find_links(source):
 
 
 def fix_path(url, call_url):
+    """
+    Function used to account for reletive paths.
+    """
     parsed_url = urlparse(url)
     parsed_call = urlparse(call_url)
     split_url_path = parsed_url.path.split('/')
@@ -116,6 +119,3 @@ class Crawler(object):
                 self.linked_pages[call_url].append(link)
 
         return 'ok'
-
-def print_usage():
-    print("Usage: python3 PyCrawler.py [URL] [Root of Domain]")
