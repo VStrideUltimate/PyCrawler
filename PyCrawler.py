@@ -3,7 +3,8 @@ File: PyCrawler.py
 Author: Dylan Wagner
 Date: August 2017
 Description:
-    Program used to discover and follow links as they are gathered of a given web domain.
+Program used to discover and follow links as they are gathered of a given web domain.
+
 """
 
 from urllib.parse import urlparse
@@ -16,7 +17,9 @@ __version__ = 0.1
 
 
 def get_source(call_url):
-    # attempt to gather URL source code.
+    """
+    attempts to gather URL source code.
+    """
     try:
         req = requests.request('GET', call_url)
 
@@ -69,7 +72,8 @@ def fix_path(url, call_url):
     if path_to_append == '/':
         path_to_append = ''
 
-    return "{url.scheme}://{url.netloc}{path}".format(url=use, path=path_to_append)
+    return "{url.scheme}://{url.netloc}{path}"\
+        .format(url=use, path=path_to_append)
 
 
 class Crawler(object):
@@ -85,7 +89,9 @@ class Crawler(object):
         self.build_relation(self.url_inpt)
 
     def in_domain(self, call_url):
-
+        """
+        Used to determine if the processed url meets the provided constrignts
+        """
         call_url = urlparse(call_url).hostname
         if call_url is None:
             return False
@@ -93,7 +99,9 @@ class Crawler(object):
         return self.root in call_url
 
     def find_domain_links(self, source, call_url):
-        # find all links to domain in source
+        """
+        find all links to domain in source
+        """
         links = find_links(source)
 
         for i in range(len(links)):
@@ -102,9 +110,11 @@ class Crawler(object):
         return [url for url in links if self.in_domain(url)]
 
     def build_relation(self, call_url):
-        # recursively build web domain graph
+        """
+        recursively build web domain graph/relation
+        """
         if call_url in self.linked_pages:
-            return 'ok'
+            return True
 
         source = get_source(call_url)
 
@@ -115,7 +125,13 @@ class Crawler(object):
         self.linked_pages[call_url] = []
 
         for link in links:
-            if self.build_relation(link) is not None and link not in self.linked_pages[call_url]:
+            if self.build_relation(link) is not None\
+            and link not in self.linked_pages[call_url]:
+
                 self.linked_pages[call_url].append(link)
 
-        return 'ok'
+        return True
+
+    def __repr__(self):
+        return '{self.__class__.__name__}({self.url_inpt}, {self.root})'.format(self=self)
+

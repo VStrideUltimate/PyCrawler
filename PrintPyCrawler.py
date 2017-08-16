@@ -74,4 +74,10 @@ def main():
     else:
         print_links_followed(valid)
 
-main()
+
+if __name__ == "__main__":
+   try:
+      main()
+   except KeyboardInterrupt:
+      # do nothing here
+      pass
