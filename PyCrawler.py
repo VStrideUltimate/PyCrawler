@@ -82,10 +82,10 @@ class Crawler(object):
         Used to recursively map domain pages.
     """
 
-    def __init__(self, url_inpt, root):
+    def __init__(self, url_inpt):
         self.url_inpt = url_inpt
-        self.root = root
         self.linked_pages = {}
+        self.root = urlparse(url_inpt).hostname	
         self.build_relation(self.url_inpt)
 
     def in_domain(self, call_url):

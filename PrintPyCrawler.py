@@ -29,7 +29,7 @@ def print_links_followed_inter(valid):
 
 
 def print_usage():
-    print("Usage: python3 PyCrawler.py [URL] [Root of Domain]\
+    print("Usage: python3 PyCrawler.py [URL]\
  '.' for interactive mode")
 
 
@@ -39,20 +39,16 @@ def print_links_followed(valid):
 
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print_usage()
         exit()
 
-    if sys.argv[2] not in sys.argv[1]:
-        print("Root domain must be part of provided url.")
-        exit()
-
     started = time.time()
-    crawled_domain = PyCrawler.Crawler(sys.argv[1], sys.argv[2])
+    crawled_domain = PyCrawler.Crawler(sys.argv[1])
     valid = [x for x in crawled_domain.linked_pages]
     valid.sort()
 
-    if len(sys.argv) > 3:
+    if len(sys.argv) > 2:
 
         print("----------    PyCrawler   ----------")
         print("Version: " + str(PyCrawler.__version__))

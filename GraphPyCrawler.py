@@ -3,7 +3,7 @@ File: GraphPyCrawler.py
 Author: Dylan Wagner
 Date: August 2017
 Description:
-	Used to show website connectivity visualy
+	Used to show website connectivity visually
 """
 
 import sys
