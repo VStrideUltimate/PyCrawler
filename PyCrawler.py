@@ -19,11 +19,13 @@ __version__ = 0.1
 def get_source(call_url):
     """
     attempts to gather URL source code.
+    @call_url: source url
+    @return: Error string or source HTML
     """
     try:
         req = requests.request('GET', call_url)
 
-        if req.status_code == 404:
+        if req.status_code == 404: # Page does not exist
             return 'ERROR -> 404'
         else:
             return req.text
@@ -34,6 +36,11 @@ def get_source(call_url):
 
 
 def find_links(source):
+    """
+    Finds and returns links in source HTML
+    @source: string containing source HTML
+    @return: list of links found in source HTML
+    """
     links = []
     soup = BeautifulSoup(source, "html.parser")
 
@@ -48,6 +55,8 @@ def find_links(source):
 def fix_path(url, call_url):
     """
     Function used to account for reletive paths.
+    @url: base url
+    @call_url: new base url or relitive path
     """
     parsed_url = urlparse(url)
     parsed_call = urlparse(call_url)
@@ -91,9 +100,10 @@ class Crawler(object):
     def in_domain(self, call_url):
         """
         Used to determine if the processed url meets the provided constrignts
+        @call_url: url is be verified is in domain
         """
         call_url = urlparse(call_url).hostname
-        if call_url is None:
+        if call_url is None: # handle empty urls
             return False
 
         return self.root in call_url
@@ -101,6 +111,8 @@ class Crawler(object):
     def find_domain_links(self, source, call_url):
         """
         find all links to domain in source
+        @source: source HTML
+        @call_url: url providing correct domain
         """
         links = find_links(source)
 
@@ -112,23 +124,24 @@ class Crawler(object):
     def build_relation(self, call_url):
         """
         recursively build web domain graph/relation
+        @call_url: source url
         """
-        if call_url in self.linked_pages:
+        if call_url in self.linked_pages: # url has been searched already, prevents infinte loops
             return True
 
         source = get_source(call_url)
 
-        if source[:5] == 'ERROR':
+        if source[:5] == 'ERROR': # handle errors in form of error string
             return None
 
         links = self.find_domain_links(source, call_url)
         self.linked_pages[call_url] = []
 
-        for link in links:
+        for link in links: # recursive DFS
             if self.build_relation(link) is not None\
             and link not in self.linked_pages[call_url]:
 
-                self.linked_pages[call_url].append(link)
+                self.linked_pages[call_url].append(link) # create relations 
 
         return True
 
