@@ -18,9 +18,14 @@ __version__ = 0.1
 
 def get_source(call_url):
     """
-    attempts to gather URL source code.
-    @call_url: source url
-    @return: Error string or source HTML
+    Attempts to gather URL source code from provided address.
+    
+    Args:
+        call_url (str): source url
+    
+    Returns:
+        str: Error string if error
+        str: source HTML on success
     """
     try:
         req = requests.request('GET', call_url)
@@ -38,8 +43,12 @@ def get_source(call_url):
 def find_links(source):
     """
     Finds and returns links in source HTML
-    @source: string containing source HTML
-    @return: list of links found in source HTML
+    
+    Args:
+        source (str): string containing source HTML
+    
+    Returns:
+        list: list of links found in source HTML
     """
     links = []
     soup = BeautifulSoup(source, "html.parser")
@@ -55,8 +64,13 @@ def find_links(source):
 def fix_path(url, call_url):
     """
     Function used to account for reletive paths.
-    @url: base url
-    @call_url: new base url or relitive path
+    
+    Args:
+        url (str): base url
+        call_url (str): new base url or relitive path
+        
+    Returns:
+        str: fixed url accounting for reletive paths call_url may contain.
     """
     parsed_url = urlparse(url)
     parsed_call = urlparse(call_url)
@@ -88,7 +102,13 @@ def fix_path(url, call_url):
 class Crawler(object):
     """
     Crawler class:
-        Used to recursively map domain pages.
+        Used to recursively map domain pages. When invoked crawler class will start buliding relations
+        between links in the web domain.
+    
+    Attributes:
+        url_inpt (str): provided url from program start.
+        linked_pages (dict): dict holding relations between links.
+        root (str): domain of provided url(url_inpt.
     """
 
     def __init__(self, url_inpt):
@@ -100,7 +120,12 @@ class Crawler(object):
     def in_domain(self, call_url):
         """
         Used to determine if the processed url meets the provided constrignts
-        @call_url: url is be verified is in domain
+        
+        Args:
+            call_url (str): url is be verified is in domain
+        
+        Returns:
+            bool: true if call_url domain matches base domain, false otherwise.
         """
         call_url = urlparse(call_url).hostname
         if call_url is None: # handle empty urls
@@ -111,8 +136,13 @@ class Crawler(object):
     def find_domain_links(self, source, call_url):
         """
         find all links to domain in source
-        @source: source HTML
-        @call_url: url providing correct domain
+        
+        Args:
+            source (str): source HTML
+            call_url (str): url providing correct domain
+        
+        Returns:
+            list: list of all links found in the source html
         """
         links = find_links(source)
 
@@ -124,7 +154,9 @@ class Crawler(object):
     def build_relation(self, call_url):
         """
         recursively build web domain graph/relation
-        @call_url: source url
+        
+        Args:
+            call_url (str): source url
         """
         if call_url in self.linked_pages: # url has been searched already, prevents infinte loops
             return True
